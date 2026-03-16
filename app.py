@@ -90,7 +90,7 @@ def main():
     if fetch_clicked:
         with st.spinner("Fetching from Reddit, downloading, generating captions..."):
             try:
-                results = run(
+                results, fetched, download_failed = run(
                     limit=limit,
                     caption_style=caption_style,
                     output_videos=VIDEOS_DIR,
@@ -100,10 +100,16 @@ def main():
                 if results:
                     st.success(f"Downloaded {len(results)} videos! Scroll down to view.")
                     st.rerun()
+                elif fetched == 0:
+                    st.warning(
+                        "Reddit returned no videos – likely blocking requests from this server. "
+                        "**Run locally** for best results: `streamlit run app.py`"
+                    )
                 else:
                     st.warning(
-                        "No videos found. Try: set Min upvotes to 0, or increase the number of videos. "
-                        "If running on Streamlit Cloud, downloads may fail – try running locally."
+                        f"Found {fetched} videos but all {download_failed} downloads failed. "
+                        "Streamlit Cloud has limited support for video downloads. "
+                        "**Run locally** for full functionality: `streamlit run app.py`"
                     )
             except Exception as e:
                 st.error(f"Error: {e}")

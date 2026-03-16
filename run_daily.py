@@ -10,7 +10,7 @@ from config import VIDEOS_DIR, METADATA_DIR
 
 if __name__ == "__main__":
     # Daily run: fetch 10 videos, engaging captions
-    run(
+    results, _, _ = run(
         limit=10,
         caption_style="engaging",
         output_videos=VIDEOS_DIR,

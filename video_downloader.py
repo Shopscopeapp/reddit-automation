@@ -17,7 +17,7 @@ def download_video(post: VideoPost, output_dir: Path) -> Path | None:
     
     ydl_opts = {
         "outtmpl": output_template,
-        "format": "best[ext=mp4]/best",
+        "format": "best",  # Single best format - no ffmpeg merge needed (Streamlit Cloud)
         "noplaylist": True,
         "no_overwrites": True,
         "quiet": True,

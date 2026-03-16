@@ -50,17 +50,23 @@ def _is_video_post(data: dict) -> bool:
 
 def _fetch_json(subreddit: str, sort: str = "hot", limit: int = 25) -> list[dict]:
     """Fetch posts from subreddit via Reddit's public JSON API (no auth required)."""
-    url = f"https://www.reddit.com/r/{subreddit}/{sort}.json"
-    headers = {"User-Agent": REDDIT_USER_AGENT or "flight-app/1.0"}
+    # Use browser-like UA - Reddit often blocks generic/script User-Agents from cloud IPs
+    ua = REDDIT_USER_AGENT or (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
+    headers = {"User-Agent": ua, "Accept": "application/json"}
     params = {"limit": min(limit, 100), "raw_json": 1}
-    try:
-        r = requests.get(url, headers=headers, params=params, timeout=15)
-        r.raise_for_status()
-        data = r.json()
-        return [c["data"] for c in data.get("data", {}).get("children", [])]
-    except Exception as e:
-        print(f"  Fetch failed for r/{subreddit}: {e}")
-        return []
+    for base in ["https://www.reddit.com", "https://old.reddit.com"]:
+        url = f"{base}/r/{subreddit}/{sort}.json"
+        try:
+            r = requests.get(url, headers=headers, params=params, timeout=20)
+            r.raise_for_status()
+            data = r.json()
+            return [c["data"] for c in data.get("data", {}).get("children", [])]
+        except Exception as e:
+            continue
+    return []
 
 
 def fetch_videos(

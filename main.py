@@ -14,23 +14,27 @@ def run(
     output_videos: Path | None = None,
     output_metadata: Path | None = None,
     min_score: int = 10,
-) -> list[dict]:
+) -> tuple[list[dict], int, int]:
     """
     Run the full pipeline: fetch -> download -> caption -> save metadata.
     
-    Returns list of results with video path, caption, and metadata.
+    Returns (results, fetched_count, download_failed_count).
     """
     output_videos = output_videos or VIDEOS_DIR
     output_metadata = output_metadata or METADATA_DIR
     
     results = []
+    fetched = 0
+    download_failed = 0
     
     for post in fetch_videos(limit=limit, min_score=min_score):
+        fetched += 1
         print(f"Processing: {post.title[:50]}... (r/{post.subreddit})")
         
         # Download
         video_path = download_video(post, output_videos)
         if not video_path:
+            download_failed += 1
             print(f"  Skipped (download failed)")
             continue
         
@@ -47,9 +51,12 @@ def run(
             "metadata_path": meta_path,
         })
         print(f"  Saved: {video_path.name}")
-        print(f"  Caption: {caption[:60]}...")
+        try:
+            print(f"  Caption: {caption[:60]}...")
+        except UnicodeEncodeError:
+            print(f"  Caption: [saved]")
     
-    return results
+    return results, fetched, download_failed
 
 
 def main():
@@ -70,7 +77,7 @@ def main():
     print(f"Fetching up to {args.limit} aviation videos from Reddit...")
     print(f"Output: {output}\n")
     
-    results = run(
+    results, fetched, failed = run(
         limit=args.limit,
         caption_style=args.style,
         output_videos=videos_dir,
@@ -78,7 +85,7 @@ def main():
         min_score=args.min_score,
     )
     
-    print(f"\nDone! Processed {len(results)} videos.")
+    print(f"\nDone! Fetched {fetched} videos, downloaded {len(results)}, {failed} failed.")
     print(f"Videos: {videos_dir}")
     print(f"Metadata + captions: {metadata_dir}")
 
