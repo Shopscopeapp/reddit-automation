@@ -26,13 +26,25 @@ def _is_video_post(data: dict) -> bool:
     """Check if post data represents a video."""
     if data.get("is_video"):
         return True
-    if "v.redd.it" in (data.get("url") or ""):
+    url = data.get("url") or ""
+    if "v.redd.it" in url:
         return True
-    media = data.get("media") or {}
-    if isinstance(media, dict) and media.get("type") == "video":
+    if data.get("domain") == "v.redd.it":
         return True
+    if data.get("post_hint") in ("video", "hosted:video"):
+        return True
+    media = data.get("media") or data.get("secure_media") or {}
+    if isinstance(media, dict):
+        if media.get("type") == "video":
+            return True
+        if "reddit_video" in media:
+            return True
     if "reddit_video" in str(media):
         return True
+    # Crossposts: check crosspost_parent_list
+    for parent in data.get("crosspost_parent_list") or []:
+        if _is_video_post(parent):
+            return True
     return False
 
 
@@ -63,7 +75,7 @@ def fetch_videos(
     """
     subreddits = subreddits or SUBREDDITS
     seen_ids = set()
-    per_sub = max(limit, 25)
+    per_sub = max(limit * 3, 50)  # Fetch more to find enough videos
 
     for subreddit in subreddits:
         posts = _fetch_json(subreddit, sort=sort, limit=per_sub)

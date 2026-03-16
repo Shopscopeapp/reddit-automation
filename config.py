@@ -12,11 +12,12 @@ REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "flight-app/1.0")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-# Aviation subreddits to pull from
+# Subreddits to pull from (aviation + videos for more video content)
 SUBREDDITS = [
     "aviation",
     "flying",
     "planes",
+    "videos",  # Video-heavy, often has aviation
     "aviationpics",
     "MilitaryAviation",
     "WeirdWings",

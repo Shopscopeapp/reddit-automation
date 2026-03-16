@@ -81,7 +81,7 @@ def main():
             ["engaging", "professional", "casual", "minimal"],
             index=0,
         )
-        min_score = st.number_input("Min upvotes", 0, 500, 10, step=5)
+        min_score = st.number_input("Min upvotes", 0, 500, 0, step=5, help="Set to 0 to include all videos")
         st.caption("Subreddits: " + ", ".join(f"r/{s}" for s in SUBREDDITS[:4]) + "...")
 
         fetch_clicked = st.button("🚀 Fetch videos", type="primary", use_container_width=True)
@@ -101,7 +101,10 @@ def main():
                     st.success(f"Downloaded {len(results)} videos! Scroll down to view.")
                     st.rerun()
                 else:
-                    st.warning("No videos found matching your criteria. Try lowering min upvotes.")
+                    st.warning(
+                        "No videos found. Try: set Min upvotes to 0, or increase the number of videos. "
+                        "If running on Streamlit Cloud, downloads may fail – try running locally."
+                    )
             except Exception as e:
                 st.error(f"Error: {e}")
 
