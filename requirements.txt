@@ -1,0 +1,15 @@
+# Reddit API
+praw>=7.7.0
+
+# Video download (handles v.redd.it video+audio merge)
+yt-dlp>=2024.1.0
+
+# AI caption generation
+openai>=1.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Web app
+streamlit>=1.28.0

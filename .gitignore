@@ -1,0 +1,12 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+downloaded_content/
+venv/
+.venv/
+*.mp4
+*.webm
+*.mkv
+node_modules/
+.next/
