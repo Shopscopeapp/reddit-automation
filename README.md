@@ -18,12 +18,9 @@ Or without venv: `pip install -r requirements.txt`
 
 **Note:** [yt-dlp](https://github.com/yt-dlp/yt-dlp) handles Reddit's v.redd.it format (video + audio merge) automatically.
 
-### 2. Reddit API credentials
+### 2. Reddit (no credentials needed)
 
-1. Go to [Reddit Apps](https://www.reddit.com/prefs/apps)
-2. Click "create another app..."
-3. Choose "script", add name and redirect URI (e.g. `http://localhost:8080`)
-4. Copy the **client ID** (under the app name) and **secret**
+The app uses Reddit's public JSON API – no API key or app registration required.
 
 ### 3. OpenAI API (for captions)
 
@@ -39,11 +36,10 @@ cp .env.example .env
 Edit `.env` with your credentials:
 
 ```
-REDDIT_CLIENT_ID=your_client_id
-REDDIT_CLIENT_SECRET=your_client_secret
-REDDIT_USER_AGENT=flight-app-content-bot/1.0
 OPENAI_API_KEY=your_openai_key
 ```
+
+(Reddit credentials not needed – uses public JSON API.)
 
 ## Web app (recommended – no database)
 

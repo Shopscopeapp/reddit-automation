@@ -104,8 +104,6 @@ def main():
                     st.warning("No videos found matching your criteria. Try lowering min upvotes.")
             except Exception as e:
                 st.error(f"Error: {e}")
-                if "REDDIT_CLIENT_ID" in str(e) or "credentials" in str(e).lower():
-                    st.info("Add Reddit API credentials to your `.env` file. See README.")
 
     # Browse existing content
     st.divider()

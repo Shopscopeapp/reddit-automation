@@ -5,10 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Reddit
-REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
-REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
-REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "flight-app-content-bot/1.0")
+# Reddit (public JSON API - no credentials needed)
+REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "flight-app/1.0")
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

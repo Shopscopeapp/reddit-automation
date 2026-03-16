@@ -1,9 +1,11 @@
 """Fetch video posts from aviation subreddits."""
-import praw
+import time
 from dataclasses import dataclass
 from typing import Generator
 
-from config import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT, SUBREDDITS
+import requests
+
+from config import REDDIT_USER_AGENT, SUBREDDITS
 
 
 @dataclass
@@ -20,29 +22,33 @@ class VideoPost:
     is_video: bool
 
 
-def get_reddit_client() -> praw.Reddit:
-    """Create authenticated Reddit client."""
-    if not REDDIT_CLIENT_ID or not REDDIT_CLIENT_SECRET:
-        raise ValueError("REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET must be set in .env")
-    
-    return praw.Reddit(
-        client_id=REDDIT_CLIENT_ID,
-        client_secret=REDDIT_CLIENT_SECRET,
-        user_agent=REDDIT_USER_AGENT,
-    )
-
-
-def is_video_post(submission) -> bool:
-    """Check if submission is a video (v.redd.it or has video media)."""
-    if hasattr(submission, "is_video") and submission.is_video:
+def _is_video_post(data: dict) -> bool:
+    """Check if post data represents a video."""
+    if data.get("is_video"):
         return True
-    # v.redd.it URLs
-    if "v.redd.it" in getattr(submission, "url", ""):
+    if "v.redd.it" in (data.get("url") or ""):
         return True
-    # Check media
-    if hasattr(submission, "media") and submission.media:
-        return submission.media.get("type") == "video" or "reddit_video" in str(submission.media)
+    media = data.get("media") or {}
+    if isinstance(media, dict) and media.get("type") == "video":
+        return True
+    if "reddit_video" in str(media):
+        return True
     return False
+
+
+def _fetch_json(subreddit: str, sort: str = "hot", limit: int = 25) -> list[dict]:
+    """Fetch posts from subreddit via Reddit's public JSON API (no auth required)."""
+    url = f"https://www.reddit.com/r/{subreddit}/{sort}.json"
+    headers = {"User-Agent": REDDIT_USER_AGENT or "flight-app/1.0"}
+    params = {"limit": min(limit, 100), "raw_json": 1}
+    try:
+        r = requests.get(url, headers=headers, params=params, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        return [c["data"] for c in data.get("data", {}).get("children", [])]
+    except Exception as e:
+        print(f"  Fetch failed for r/{subreddit}: {e}")
+        return []
 
 
 def fetch_videos(
@@ -53,43 +59,37 @@ def fetch_videos(
 ) -> Generator[VideoPost, None, None]:
     """
     Fetch video posts from aviation subreddits.
-    
-    Args:
-        subreddits: List of subreddit names (default: config SUBREDDITS)
-        sort: 'hot', 'top', 'new', or 'rising'
-        limit: Max posts per subreddit
-        min_score: Minimum upvotes to include
+    Uses Reddit's public JSON API - no API credentials required.
     """
     subreddits = subreddits or SUBREDDITS
-    reddit = get_reddit_client()
-    
-    # Combine subreddits for multi-feed
-    multi = "+".join(subreddits)
-    sub = reddit.subreddit(multi)
-    
-    sort_method = getattr(sub, sort, sub.hot)
-    posts = sort_method(limit=limit * len(subreddits))
-    
     seen_ids = set()
-    
-    for submission in posts:
-        if submission.id in seen_ids:
-            continue
-        if submission.score < min_score:
-            continue
-        if not is_video_post(submission):
-            continue
-            
-        seen_ids.add(submission.id)
-        
-        yield VideoPost(
-            id=submission.id,
-            title=submission.title,
-            subreddit=str(submission.subreddit),
-            url=f"https://www.reddit.com{submission.permalink}",
-            permalink=submission.permalink,
-            score=submission.score,
-            num_comments=submission.num_comments,
-            author=str(submission.author) if submission.author else "[deleted]",
-            is_video=True,
-        )
+    per_sub = max(limit, 25)
+
+    for subreddit in subreddits:
+        posts = _fetch_json(subreddit, sort=sort, limit=per_sub)
+        for data in posts:
+            if data.get("id") in seen_ids:
+                continue
+            if data.get("score", 0) < min_score:
+                continue
+            if not _is_video_post(data):
+                continue
+
+            seen_ids.add(data["id"])
+            permalink = data.get("permalink", "")
+            if not permalink.startswith("/"):
+                permalink = "/" + permalink
+
+            yield VideoPost(
+                id=data["id"],
+                title=data.get("title", "")[:300],
+                subreddit=data.get("subreddit", subreddit),
+                url=f"https://www.reddit.com{permalink}",
+                permalink=permalink,
+                score=data.get("score", 0),
+                num_comments=data.get("num_comments", 0),
+                author=data.get("author") or "[deleted]",
+                is_video=True,
+            )
+
+        time.sleep(1)  # Be nice to Reddit's servers
