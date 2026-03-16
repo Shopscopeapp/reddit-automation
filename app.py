@@ -5,7 +5,7 @@ from pathlib import Path
 import streamlit as st
 
 from config import VIDEOS_DIR, METADATA_DIR, SUBREDDITS, APP_PASSWORD
-from main import run
+from pipeline import run
 
 st.set_page_config(
     page_title="Flight App Content",
@@ -67,6 +67,11 @@ def main():
         st.stop()
     st.title("✈️ Flight App Content")
     st.caption("Pull aviation videos from Reddit • Download • Generate captions")
+
+    st.info(
+        "**Streamlit Cloud:** Reddit blocks requests from cloud servers (403). "
+        "For full functionality, run locally: `streamlit run app.py`"
+    )
 
     # Sidebar
     with st.sidebar:

@@ -62,7 +62,7 @@ Others can open `http://YOUR_IP:8501` (e.g. `http://192.168.1.5:8501`).
 - [Streamlit Community Cloud](https://share.streamlit.io) – free, connect GitHub, add secrets
 - [Railway](https://railway.app) – free tier, persistent storage
 
-Both use your existing `.env` secrets (Reddit, OpenAI). No Supabase or database required.
+**⚠️ Streamlit Cloud limitation:** Reddit returns 403 for requests from cloud servers. The app will load but fetch will fail. **Run locally** for full functionality. In deployment settings, select **Python 3.12** (not 3.14) in Advanced settings to avoid import errors.
 
 ## CLI usage
 
